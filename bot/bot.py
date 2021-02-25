@@ -40,7 +40,8 @@ intents = discord.Intents.default()
 
 COGS = {
     'cogs.errors', 'jishaku',
-    'cogs.admin'
+    'cogs.admin', 'cogs.utils',
+    'cogs.help'
 }
 
 
@@ -54,6 +55,9 @@ class CustomBot(commands.Bot):
             owner_ids={config.DEV_ID},
             **kwargs
         )
+
+        # global name declaration
+        self.name = 'TestBot'
 
         # Async Loop
         self.loop = asyncio.get_event_loop()
@@ -80,6 +84,10 @@ class CustomBot(commands.Bot):
             except Exception as e:
                 log.error(f'Cog {cog} failed to load!')
                 traceback.print_exc()
+
+    @property
+    def uptime(self):
+        return pendulum.now(tz=pendulum.tz.UTC) - self.start_time
 
 
 bot = CustomBot()
