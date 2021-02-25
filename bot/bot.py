@@ -40,7 +40,7 @@ intents = discord.Intents.default()
 
 COGS = {
     'cogs.errors', 'jishaku',
-    'cogs.admin', 'cogs.utils',
+    'cogs.admin', 'cogs.utils', 'cogs.owner',
     'cogs.help'
 }
 
@@ -100,6 +100,19 @@ async def on_ready():
              f'Username: {bot.user.display_name}\n'
              f'Prefix: {config.PREFIX}\n'
              f'{"-"*20}')
+
+
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return
+
+    if not bot.is_ready():
+        return
+
+    context = await bot.get_context(message)
+    if context.command is not None:
+        return await bot.invoke(context)
 
 
 if __name__ == '__main__':

@@ -61,7 +61,7 @@ def generate_command_names(command_list, short_doc=False):
 class CustomHelp(commands.HelpCommand):
     def __init__(self):
         attrs = {
-            "cooldown": commands.Cooldown(1, 5, commands.BucketType.channel),
+            "cooldown": commands.Cooldown(5, 10, commands.BucketType.channel),
             "aliases": ["h"]
         }
         super().__init__(command_attrs=attrs)

@@ -3,6 +3,8 @@ import traceback
 import sys
 from discord.ext import commands
 import logging
+from utils.functions import create_default_embed
+import pendulum
 
 log = logging.getLogger(__name__)
 
@@ -21,6 +23,9 @@ class CommandErrorHandler(commands.Cog):
         error: commands.CommandError
             The Exception raised.
         """
+
+        embed = create_default_embed(ctx, title='Command Error!', color=discord.Colour(0xDC143C))
+        cmd_name = f'{ctx.prefix}{ctx.command.qualified_name}'
 
         # This prevents any commands with local handlers being handled here in on_command_error.
         if hasattr(ctx.command, 'on_error'):
@@ -43,13 +48,25 @@ class CommandErrorHandler(commands.Cog):
             return
 
         if isinstance(error, commands.DisabledCommand):
-            await ctx.send(f'{ctx.command} has been disabled.')
+            embed.description = f'`{cmd_name}` has been disabled.'
+            await ctx.send(embed=embed)
 
         elif isinstance(error, commands.NoPrivateMessage):
             try:
-                await ctx.author.send(f'{ctx.command} can not be used in Private Messages.')
+                embed.description = f'`{cmd_name}` can not be used in Private Messages.'
+                await ctx.author.send(embed=embed)
             except discord.HTTPException:
                 pass
+
+        elif isinstance(error, commands.MissingRequiredArgument):
+            embed.description = f'Missing required argument `{error.param.name}`.\n' \
+                                f'Please check `{ctx.prefix}help {ctx.command.qualified_name}` for more information.'
+            return await ctx.send(embed=embed)
+
+        elif isinstance(error, commands.CommandOnCooldown):
+            cd = pendulum.duration(seconds=error.retry_after)
+            embed.description = f'`{cmd_name}` is on cooldown! Try again in {cd.in_words()}!'
+            return await ctx.send(embed=embed)
 
         else:
             # All other Errors not returned come here. And we can just print the default TraceBack.
