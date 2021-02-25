@@ -1,0 +1,9 @@
+# Core
+discord.py
+git+https://github.com/Rapptz/discord-ext-menus@master
+asyncpg # Async PostgreSQL
+
+pendulum # Advanced Date/Time
+parsedatetime # Read time intervals from user in
+jishaku # Dev tools
+psutil # System info
