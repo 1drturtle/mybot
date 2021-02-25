@@ -9,6 +9,8 @@ import pendulum
 from discord.ext import commands
 
 import config
+from utils.functions import try_delete
+from utils.context import CustomContext
 
 handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(logging.Formatter('[{asctime}] [{levelname}] | {name}: {message}', style='{'))
@@ -74,8 +76,12 @@ class CustomBot(commands.Bot):
 
         # Let's setup the cache
         self.prefixes = dict(self.loop.run_until_complete(
-            self.db.fetch("SELECT id, prefix from prefixes")
+            self.db.fetch("SELECT id, prefix FROM prefixes")
         ))
+
+        self.blacklisted = set([x.get('id') for x in self.loop.run_until_complete(
+            self.db.fetch("SELECT id FROM blacklist")
+        )])
 
         # Load Extensions (Cogs)
         for cog in COGS:
@@ -88,6 +94,15 @@ class CustomBot(commands.Bot):
     @property
     def uptime(self):
         return pendulum.now(tz=pendulum.tz.UTC) - self.start_time
+
+    async def run_command_metrics(self, ctx):
+        await self.db.execute(
+            f'INSERT INTO command_usage (id, commands_used) values ({ctx.author.id}, 1)'
+            f'ON CONFLICT (id) DO UPDATE SET commands_used = command_usage.commands_used + 1'
+        )
+
+    async def get_context(self, message, *, cls=CustomContext):
+        return await super().get_context(message, cls=cls)
 
 
 bot = CustomBot()
@@ -107,12 +122,26 @@ async def on_message(message):
     if message.author.bot:
         return
 
+    if message.author.id in bot.blacklisted:
+        return
+
     if not bot.is_ready():
         return
 
     context = await bot.get_context(message)
     if context.command is not None:
         return await bot.invoke(context)
+
+
+@bot.event
+async def on_command(ctx):
+
+    await bot.run_command_metrics(ctx)
+
+    if ctx.message.content.startswith('jsk'):
+        return
+
+    await try_delete(ctx.message)
 
 
 if __name__ == '__main__':

@@ -30,7 +30,7 @@ class AdminCommands(commands.Cog):
                 f"  DO UPDATE set id=prefixes.id, prefix=EXCLUDED.prefix;"
             )
             embed.title = 'Guild Prefix Changed!'
-            embed.description = f'The prefix for {ctx.guild.name} has been set to `{prefix}`'
+            embed.description = f'The server prefix has been set to `{prefix}`'
             return await ctx.send(embed=embed)
 
         current_prefix = self.bot.prefixes.get(ctx.guild.id, config.PREFIX)
