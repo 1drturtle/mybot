@@ -66,7 +66,7 @@ class Tags(commands.Cog):
         """
         await self.bot.db.execute(
             f'UPDATE tags'
-            '    SET uses = uses + 1'
+            '    SET uses = uses + 1\n'
             'WHERE tag_id = $1',
             tag_id
         )
@@ -141,7 +141,7 @@ class Tags(commands.Cog):
             return await ctx.send(f'Could not find a tag in this server owned by you with name `{tag_name}`.')
         await self.bot.db.execute(
             f'UPDATE tags'
-            '    SET content = $4'
+            '    SET content = $4\n'
             'WHERE name = $1 and author_id = $2 and guild_id = $3',
             tag_name,
             ctx.author.id,

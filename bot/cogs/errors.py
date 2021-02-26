@@ -8,6 +8,7 @@ import pendulum
 
 log = logging.getLogger(__name__)
 
+
 class CommandErrorHandler(commands.Cog):
 
     def __init__(self, bot):

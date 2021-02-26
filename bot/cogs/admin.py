@@ -24,10 +24,12 @@ class AdminCommands(commands.Cog):
             self.bot.prefixes[ctx.guild.id] = prefix
             # update DB
             await self.bot.db.execute(
-                f"INSERT INTO prefixes(id, prefix)"
-                f"VALUES({ctx.guild.id}, '{prefix}')"
-                f"ON CONFLICT ON CONSTRAINT guild_id"
-                f"  DO UPDATE set id=prefixes.id, prefix=EXCLUDED.prefix;"
+                "INSERT INTO prefixes(id, prefix)\n"
+                "VALUES($1, $2)\n"
+                "ON CONFLICT ON CONSTRAINT guild_id\n"
+                "  DO UPDATE set id=prefixes.id, prefix=EXCLUDED.prefix;",
+                ctx.guild.id,
+                prefix
             )
             embed.title = 'Guild Prefix Changed!'
             embed.description = f'The server prefix has been set to `{prefix}`'
