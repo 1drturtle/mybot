@@ -7,3 +7,5 @@ pendulum # Advanced Date/Time
 parsedatetime # Read time intervals from user in
 jishaku # Dev tools
 psutil # System info
+fuzzywuzzy # Fuzzy Searching
+python-Levenshtein # ^

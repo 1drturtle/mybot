@@ -25,7 +25,10 @@ class CommandErrorHandler(commands.Cog):
         """
 
         embed = create_default_embed(ctx, title='Command Error!', color=discord.Colour(0xDC143C))
-        cmd_name = f'{ctx.prefix}{ctx.command.qualified_name}'
+        if ctx.command:
+            cmd_name = f'`{ctx.prefix}{ctx.command.qualified_name}`'
+        else:
+            cmd_name = 'This command'
 
         # This prevents any commands with local handlers being handled here in on_command_error.
         if hasattr(ctx.command, 'on_error'):
@@ -48,12 +51,12 @@ class CommandErrorHandler(commands.Cog):
             return
 
         if isinstance(error, commands.DisabledCommand):
-            embed.description = f'`{cmd_name}` has been disabled.'
+            embed.description = f'{cmd_name} has been disabled.'
             await ctx.send(embed=embed)
 
         elif isinstance(error, commands.NoPrivateMessage):
             try:
-                embed.description = f'`{cmd_name}` can not be used in Private Messages.'
+                embed.description = f'{cmd_name} can not be used in Private Messages.'
                 await ctx.author.send(embed=embed)
             except discord.HTTPException:
                 pass
@@ -61,12 +64,16 @@ class CommandErrorHandler(commands.Cog):
         elif isinstance(error, commands.MissingRequiredArgument):
             embed.description = f'Missing required argument `{error.param.name}`.\n' \
                                 f'Please check `{ctx.prefix}help {ctx.command.qualified_name}` for more information.'
-            return await ctx.send(embed=embed)
+            await ctx.send(embed=embed)
 
         elif isinstance(error, commands.CommandOnCooldown):
             cd = pendulum.duration(seconds=error.retry_after)
-            embed.description = f'`{cmd_name}` is on cooldown! Try again in {cd.in_words()}!'
-            return await ctx.send(embed=embed)
+            embed.description = f'{cmd_name} is on cooldown! Try again in {cd.in_words()}!'
+            await ctx.send(embed=embed)
+
+        elif isinstance(error, commands.BadArgument):
+            embed.description = f'Bad Argument! Double check `{ctx.prefix}help {ctx.command.qualified_name}`\n{error}'
+            await ctx.send(embed=embed)
 
         else:
             # All other Errors not returned come here. And we can just print the default TraceBack.
