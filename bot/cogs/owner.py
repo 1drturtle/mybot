@@ -3,6 +3,9 @@ import discord
 import typing
 from utils.functions import create_default_embed
 import datetime
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class Owner(commands.Cog):
@@ -43,6 +46,7 @@ class Owner(commands.Cog):
             reason if reason else ''
         )
         self.bot.blacklisted.add(who.id)
+        log.debug(f'Blacklisted {who.name + who.discriminator}')
         return await ctx.send(embed=embed)
 
     @commands.command(name='unblacklist')
@@ -62,6 +66,7 @@ class Owner(commands.Cog):
             f'DELETE FROM blacklist where id = $1', who.id
         )
         self.bot.blacklisted.remove(who.id)
+        log.debug(f'{who.name + who.discriminator} removed from blacklist.')
         return await ctx.send(embed=embed)
 
     @commands.command(name='leave')
@@ -76,6 +81,7 @@ class Owner(commands.Cog):
         embed.title = 'Leaving Guild!'
         embed.description = f'Leaving Guild {guild.name}'
         await guild.leave()
+        log.info(f'Force-leaving guild {guild.name} ({guild.id}')
         return await ctx.send(embed=embed)
 
 

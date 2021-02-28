@@ -1,6 +1,9 @@
 from discord.ext import commands
 from utils.functions import create_default_embed
 import config
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class AdminCommands(commands.Cog):
@@ -31,6 +34,7 @@ class AdminCommands(commands.Cog):
                 ctx.guild.id,
                 prefix
             )
+            log.debug(f'Prefix for guild {ctx.guild.name} ({ctx.guild.id}) changed to {prefix}')
             embed.title = 'Guild Prefix Changed!'
             embed.description = f'The server prefix has been set to `{prefix}`'
             return await ctx.send(embed=embed)

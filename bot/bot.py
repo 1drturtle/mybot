@@ -15,27 +15,30 @@ from utils.context import CustomContext
 handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(logging.Formatter('[{asctime}] [{levelname}] | {name}: {message}', style='{'))
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 # Make discord logs a bit quieter
 logging.getLogger('discord.gateway').setLevel(logging.WARNING)
 logging.getLogger('discord.client').setLevel(logging.WARNING)
+logging.getLogger('discord.http').setLevel(logging.INFO)
 
 log = logging.getLogger(__name__)
 
 
-async def get_prefix(bot, message: discord.Message):
+async def get_prefix(bot_, message: discord.Message):
+    prefixes = []
     # first things first, no prefix for jsk
-    if message.content.startswith('jsk') and message.author.id in bot.owner_ids:
-        return ""
+    if message.author.id in bot_.owner_ids and not bot_.owner_use_prefix:
+        prefixes.append('')
 
     # if we're not in a guild, let's return default prefix
     if not message.guild:
-        return commands.when_mentioned_or(*config.PREFIX)(bot, message)
+        return commands.when_mentioned_or(*config.PREFIX)(bot_, message)
 
     # grab from cache
-    return commands.when_mentioned_or(*bot.prefixes.get(message.guild.id, config.PREFIX))(bot, message)
+    prefixes.append(bot_.prefixes.get(message.guild.id, config.PREFIX))
+    return commands.when_mentioned_or(*prefixes)(bot_, message)
 
 
 intents = discord.Intents.default()
@@ -52,7 +55,6 @@ class CustomBot(commands.Bot):
         super().__init__(
             command_prefix=get_prefix,
             intents=intents,
-            # help_command=None,
             allowed_mention=discord.AllowedMentions.none(),
             owner_ids={config.DEV_ID},
             **kwargs
@@ -78,10 +80,15 @@ class CustomBot(commands.Bot):
         self.prefixes = dict(self.loop.run_until_complete(
             self.db.fetch("SELECT id, prefix FROM prefixes")
         ))
+        log.info('Prefixes Loaded')
 
         self.blacklisted = set([x.get('id') for x in self.loop.run_until_complete(
             self.db.fetch("SELECT id FROM blacklist")
         )])
+        log.info('Blacklist Loaded')
+
+        # no prefix for owner toggle
+        self.owner_use_prefix = True
 
         # Load Extensions (Cogs)
         for cog in COGS:
@@ -90,6 +97,7 @@ class CustomBot(commands.Bot):
             except Exception as e:
                 log.error(f'Cog {cog} failed to load!')
                 traceback.print_exc()
+        log.info('All Cogs Loaded!')
 
     @property
     def uptime(self):
@@ -97,9 +105,11 @@ class CustomBot(commands.Bot):
 
     async def run_command_metrics(self, ctx):
         await self.db.execute(
-            f'INSERT INTO command_usage (id, commands_used) values ({ctx.author.id}, 1)'
-            f'ON CONFLICT (id) DO UPDATE SET commands_used = command_usage.commands_used + 1'
+            "INSERT INTO command_usage (id, commands_used) values ($1, 1)"
+            "ON CONFLICT (id) DO UPDATE SET commands_used = command_usage.commands_used + 1",
+            ctx.author.id
         )
+        log.debug(f'{ctx.author} ran command {ctx.command.qualified_name}')
 
     async def get_context(self, message, *, cls=CustomContext):
         return await super().get_context(message, cls=cls)
@@ -110,7 +120,7 @@ bot = CustomBot()
 
 @bot.event
 async def on_ready():
-    log.info(f'\nBot is ready! \n'
+    log.info(f'Bot is ready!\n'
              f'{"-"*20} \n'
              f'Username: {bot.user.display_name}\n'
              f'Prefix: {config.PREFIX}\n'
@@ -119,10 +129,12 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    if message.author.bot:
+    author = message.author
+    if author.bot:
         return
 
-    if message.author.id in bot.blacklisted:
+    if author.id in bot.blacklisted:
+        logging.getLogger('owner').debug(f'Ignoring message from blacklisted user {author.name + author.discriminator}')
         return
 
     if not bot.is_ready():
