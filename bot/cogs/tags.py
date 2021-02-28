@@ -1,6 +1,9 @@
 from discord.ext import commands
 from asyncpg.exceptions import UniqueViolationError
 from fuzzywuzzy import process
+import logging
+
+log = logging.getLogger(__name__)
 
 
 def check_tag_name(name: str, illegals: list):
@@ -47,6 +50,8 @@ class Tags(commands.Cog):
         except UniqueViolationError:
             return False
         else:
+            log.debug(f'Tag created in {ctx.guild} ({ctx.guild.id})'
+                      f' by {ctx.author.name + ctx.author.discriminator} ({ctx.author.id})')
             return True
 
     async def fetch_tag(self, ctx, tag_name, owner=True):
@@ -64,6 +69,7 @@ class Tags(commands.Cog):
         """
         Increments the use count on a tag.
         """
+        log.debug(f'Tag {tag_id} executed.')
         await self.bot.db.execute(
             f'UPDATE tags'
             '    SET uses = uses + 1\n'
@@ -148,6 +154,8 @@ class Tags(commands.Cog):
             ctx.guild.id,
             new_content
         )
+        log.debug(f'Tag {tag_name} edited in {ctx.guild} ({ctx.guild.id})'
+                  f' by {ctx.author.name + ctx.author.discriminator} ({ctx.author.id})')
         return await ctx.send(f'Tag `{tag_name}` has been successfully edited.')
 
     @tag.command(name='delete')
@@ -171,7 +179,8 @@ class Tags(commands.Cog):
             ctx.author.id,
             ctx.guild.id
         )
-
+        log.debug(f'Tag {tag_name} deleted in {ctx.guild} ({ctx.guild.id})'
+                  f' by {ctx.author.name + ctx.author.discriminator} ({ctx.author.id})')
         return await ctx.send(f'Tag `{tag_name}` has been deleted.')
 
     @tag.command(name='info')
