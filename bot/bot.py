@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 
 
 async def get_prefix(bot_, message: discord.Message):
-    prefixes = []
+    prefixes = [config.PREFIX]
     # first things first, no prefix for jsk
     if message.author.id in bot_.owner_ids and not bot_.owner_use_prefix\
             and message.content.startswith('jsk'):
@@ -36,7 +36,7 @@ async def get_prefix(bot_, message: discord.Message):
 
     # if we're not in a guild, let's return default prefix
     if not message.guild:
-        return commands.when_mentioned_or(*config.PREFIX)(bot_, message)
+        return commands.when_mentioned_or(*prefixes)(bot_, message)
 
     # grab from cache
     prefixes.append(bot_.prefixes.get(message.guild.id, config.PREFIX))
@@ -138,7 +138,7 @@ async def on_ready():
     log.info(f'Bot is ready!\n'
              f'{"-"*20} \n'
              f'Username: {bot.user.display_name}\n'
-             f'Prefix: {config.PREFIX}\n'
+             f'Prefix: `{config.PREFIX}`\n'
              f'{"-"*20}')
 
 
@@ -170,6 +170,18 @@ async def on_command(ctx):
 
     await try_delete(ctx.message)
 
+
+@bot.event
+async def on_guild_join(guild):
+    log.debug(f'Joined guild {guild.name} ({guild.id})')
+    if len(bot.guilds) - 1 >= 95:
+        try:
+            await guild.owner.send('Sorry for the DM! I unfortunately had to leave your server because I have hit the'
+                                   'limit of servers I can be in.')
+        except:
+            pass
+        await guild.leave()
+        log.info(f'Leaving Guild {guild.name} ({guild.id}) due to max limit.')
 
 if __name__ == '__main__':
     bot.run(config.TOKEN)

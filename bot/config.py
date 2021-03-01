@@ -8,7 +8,7 @@ POSTGRES_DATA = json.loads(os.getenv('DISCORD_DB_DATA', '{}'))
 # -- Optional --
 # --------------
 
-PREFIX = os.getenv('DISCORD_BOT_PREFIX', '-')
+PREFIX = os.getenv('DISCORD_BOT_PREFIX', 'p.')
 DEV_ID = int(os.getenv('DISCORD_DEV_ID', '175386962364989440'))
 DEFAULT_STATUS = os.getenv('DISCORD_STATUS', f'{PREFIX}help')
 

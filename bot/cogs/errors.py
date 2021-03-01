@@ -76,6 +76,14 @@ class CommandErrorHandler(commands.Cog):
             embed.description = f'Bad Argument! Double check `{ctx.prefix}help {ctx.command.qualified_name}`\n{error}'
             await ctx.send(embed=embed)
 
+        elif isinstance(error, discord.Forbidden):
+            try:
+                embed.description = f'I do not have permissions to run {cmd_name} in that channel! Please double-check' \
+                                    f'your permission settings!'
+                await ctx.author.send(embed=embed)
+            except:
+                pass
+
         else:
             # All other Errors not returned come here. And we can just print the default TraceBack.
             log.error('Ignoring exception in command {}:'.format(ctx.command))
