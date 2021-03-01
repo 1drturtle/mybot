@@ -219,10 +219,10 @@ class Tags(commands.Cog):
     @tag.command(name='search')
     async def tag_search(self, ctx, tag_name):
         """Searches for a tag in this server."""
-        similiar = await self.find_similar(tag_name, ctx.guild.id)
+        similar = await self.find_similar(tag_name, ctx.guild.id)
         embed = ctx.embed
         embed.title = f'Search result for {tag_name}'
-        embed.description = '\n'.join([f'- {x.get("name")}' for x in similiar]) if similiar else 'No tag found.'
+        embed.description = '\n'.join([f'- {x.get("name")}' for x in similar]) if similar else 'No tag found.'
         return await ctx.send(embed=embed)
 
 

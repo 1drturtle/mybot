@@ -9,3 +9,4 @@ jishaku # Dev tools
 psutil # System info
 fuzzywuzzy # Fuzzy Searching
 python-Levenshtein # ^
+d20 # Dice Roller
