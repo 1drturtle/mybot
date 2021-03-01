@@ -60,6 +60,7 @@ class Math(commands.Cog):
         return await ctx.send(embed=embed)
 
     @commands.command(name='mystbin', aliases=['pastebin', 'bin'])
+    @commands.cooldown(1, 20, commands.BucketType.user)
     async def code_bin(self, ctx, *, content: str = None):
         """
         Uploads the specified arguments to myst bin (Also takes attachments!)
