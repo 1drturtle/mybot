@@ -22,7 +22,6 @@ class Math(commands.Cog):
         result = await self.bot.session.post(url='http://api.mathjs.org/v4/',
                                              json=data)
         result = await result.json()
-        print(result)
         embed = ctx.embed
         embed.add_field(name='Query', value=f'```xl\n{query}\n```')
         if result['result'] is None:

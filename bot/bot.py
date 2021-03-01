@@ -47,7 +47,7 @@ intents = discord.Intents.default()
 
 COGS = {
     'cogs.errors', 'jishaku',
-    'cogs.admin', 'cogs.utils', 'cogs.owner', 'cogs.tags', 'cogs.math',
+    'cogs.admin', 'cogs.utils', 'cogs.owner', 'cogs.tags', 'cogs.math', 'cogs.fun',
     'cogs.help', 'cogs.info'
 }
 
