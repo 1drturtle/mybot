@@ -8,15 +8,6 @@ class Math(commands.Cog):
     """Commands to do Math in the bot."""
     def __init__(self, bot):
         self.bot = bot
-        self.task = self.bot.loop.create_task(self.initialize())
-        self.session = None
-
-    async def initialize(self):
-        self.session = aiohttp.ClientSession()
-
-    def cog_unload(self):
-        self.task.cancel()
-        self.session.close()
 
     @commands.command(name='math')
     async def math_cmd(self, ctx, *, query: str):
@@ -28,8 +19,8 @@ class Math(commands.Cog):
         data = {
             'expr': query,
         }
-        result = await self.session.post(url='http://api.mathjs.org/v4/',
-                                         json=data)
+        result = await self.bot.session.post(url='http://api.mathjs.org/v4/',
+                                             json=data)
         result = await result.json()
         print(result)
         embed = ctx.embed
@@ -66,6 +57,30 @@ class Math(commands.Cog):
                 output = f'{output[:800]}...\n**Total**: {result.total}'
             embed.add_field(name='Result', value=output)
             embed.colour = discord.Colour.green()
+        return await ctx.send(embed=embed)
+
+    @commands.command(name='mystbin', aliases=['pastebin', 'bin'])
+    async def code_bin(self, ctx, *, content: str = None):
+        """
+        Uploads the specified arguments to myst bin (Also takes attachments!)
+
+        `content` - The code to upload. If no code is provided, will check for attachments
+        """
+        if not content:
+            content = []
+            if not ctx.message.attachments:
+                raise commands.MissingRequiredArgument('content')
+            for attachment in ctx.message.attachments:
+                if not attachment.filename.endswith('.txt'):
+                    raise commands.BadArgument('Filename must end in `.txt`')
+                file_content = await attachment.read()
+                file_content = file_content.decode('utf-8')
+                content.append(file_content)
+            content = '\n\n'.join(content)
+        bin = await ctx.create_mystbin(content)
+        embed = ctx.embed
+        embed.title = 'MystBin Created!'
+        embed.description = f'Access your code [here]({bin})'
         return await ctx.send(embed=embed)
 
 

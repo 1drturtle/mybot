@@ -13,6 +13,17 @@ class CustomContext(commands.Context):
     def embed(self):
         return create_default_embed(self)
 
+    async def create_mystbin(self, data: str):
+        """
+        Creates a Myst Bin with the provided data.
+        """
+        data = bytes(data, 'utf-8')  # turn our string into bytes
+
+        r = await self.bot.session.post('https://mystb.in/documents', data=data)
+        res = await r.json()
+        key = res["key"]
+        return f"https://mystb.in/{key}"
+
     async def prompt(self, title: str, description: str, timeout=30, sendable=None) -> str:
         """
         Prompts the Context author for a question, and returns the result. Returns None if they do not respond.

@@ -7,6 +7,7 @@ import asyncpg
 import discord
 import pendulum
 from discord.ext import commands
+import aiohttp
 
 import config
 from utils.functions import try_delete
@@ -76,6 +77,9 @@ class CustomBot(commands.Bot):
             )
         )
 
+        # create async http client
+        self.session = aiohttp.ClientSession(loop=self.loop)
+
         # Let's setup the cache
         self.prefixes = dict(self.loop.run_until_complete(
             self.db.fetch("SELECT id, prefix FROM prefixes")
@@ -113,6 +117,11 @@ class CustomBot(commands.Bot):
 
     async def get_context(self, message, *, cls=CustomContext):
         return await super().get_context(message, cls=cls)
+
+    # close our HTTP session when we close the bot.
+    async def close(self):
+        await super().close()
+        await self.session.close()
 
 
 bot = CustomBot()
