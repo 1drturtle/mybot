@@ -54,7 +54,7 @@ class Info(commands.Cog):
         joined_server = pendulum.instance(who.joined_at)
         embed.add_field(
             name='Time Info',
-            value=f'**Account Created:** {acc_create.to_day_datetime_string()} \n({acc_create.diff_for_humans()} ago)\n'
+            value=f'**Account Created:** {acc_create.to_day_datetime_string()} \n({acc_create.diff_for_humans()})\n'
                   f'**Joined Server:** {joined_server.to_day_datetime_string()} \n({joined_server.diff_for_humans()})',
             inline=False
         )
