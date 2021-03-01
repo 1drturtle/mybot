@@ -30,7 +30,8 @@ log = logging.getLogger(__name__)
 async def get_prefix(bot_, message: discord.Message):
     prefixes = []
     # first things first, no prefix for jsk
-    if message.author.id in bot_.owner_ids and not bot_.owner_use_prefix:
+    if message.author.id in bot_.owner_ids and not bot_.owner_use_prefix\
+            and message.content.startswith('jsk'):
         prefixes.append('')
 
     # if we're not in a guild, let's return default prefix
@@ -94,7 +95,7 @@ class CustomBot(commands.Bot):
         log.info('Blacklist Loaded')
 
         # no prefix for owner toggle
-        self.owner_use_prefix = True
+        self.owner_use_prefix = False
 
         # Load Extensions (Cogs)
         for cog in COGS:

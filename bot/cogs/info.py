@@ -50,14 +50,12 @@ class Info(commands.Cog):
             inline=False
         )
         # timestamps: acc created, join time
-        acc_created = pendulum.instance(who.created_at)
-        acc_created_diff = (now := pendulum.now(tz=pendulum.tz.UTC)) - acc_created
+        acc_create = pendulum.instance(who.created_at)
         joined_server = pendulum.instance(who.joined_at)
-        join_diff = now - joined_server
         embed.add_field(
             name='Time Info',
-            value=f'**Account Created:** {acc_created.to_day_datetime_string()} \n({acc_created_diff.in_words()} ago)\n'
-                  f'**Joined Server:** {joined_server.to_day_datetime_string()} \n({join_diff.in_words()} ago)',
+            value=f'**Account Created:** {acc_create.to_day_datetime_string()} \n({acc_create.diff_for_humans()} ago)\n'
+                  f'**Joined Server:** {joined_server.to_day_datetime_string()} \n({joined_server.diff_for_humans()})',
             inline=False
         )
         # permissions: highest role, is owner of guild
