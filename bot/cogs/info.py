@@ -1,8 +1,11 @@
 from discord.ext import commands
+import pendulum
+import discord
 
 
 class Info(commands.Cog):
     """Commands that contain information about the bot."""
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -22,6 +25,50 @@ class Info(commands.Cog):
         cmd_count = sum([1 for cmd in self.bot.walk_commands()])
         embed.add_field(name='Command Info!', value=f'`{len(self.bot.extensions)}` extensions loaded\n'
                                                     f'`{cmd_count}` total commands loaded.')
+
+        return await ctx.send(embed=embed)
+
+    @commands.command(name='member', aliases=['memberinfo'])
+    @commands.guild_only()
+    async def memberinfo(self, ctx, who: discord.Member = None):
+        """
+        Gets information about a member in the server.
+
+        `who` - The member to get information about. Will use yourself if no member is specified.
+        """
+        embed = ctx.embed
+        if who is None:
+            who = ctx.author
+        embed.title = f'{who.display_name} Member Info!'
+        embed.set_thumbnail(url=str(who.avatar_url))
+        # general: name, id, nick
+        embed.add_field(
+            name='General Info',
+            value=f'**Name:** {who.name}\n'
+                  f'**Nick:** {who.display_name}\n'
+                  f'**ID:** `{who.id}`',
+            inline=False
+        )
+        # timestamps: acc created, join time
+        acc_created = pendulum.instance(who.created_at)
+        acc_created_diff = (now := pendulum.now(tz=pendulum.tz.UTC)) - acc_created
+        joined_server = pendulum.instance(who.joined_at)
+        join_diff = now - joined_server
+        embed.add_field(
+            name='Time Info',
+            value=f'**Account Created:** {acc_created.to_day_datetime_string()} \n({acc_created_diff.in_words()} ago)\n'
+                  f'**Joined Server:** {joined_server.to_day_datetime_string()} \n({join_diff.in_words()} ago)',
+            inline=False
+        )
+        # permissions: highest role, is owner of guild
+        embed.add_field(
+            name='Permissions',
+            value=f'**Highest Role:** {who.top_role.mention}\n'
+                  f'**Guild Owner:** {":white_check_mark:" if who.id == ctx.guild.owner_id else ":no_entry_sign:"}',
+            inline=False
+        )
+        # mutual: # of mutual servers
+        # embed.add_field(name='Other', value=f'Mutual Servers: {len(who.mutual_guilds)}')
 
         return await ctx.send(embed=embed)
 

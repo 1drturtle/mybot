@@ -78,7 +78,9 @@ class CustomBot(commands.Bot):
         )
 
         # create async http client
-        self.session = aiohttp.ClientSession(loop=self.loop)
+        self.session = self.loop.run_until_complete(
+            self.get_client_session()
+        )
 
         # Let's setup the cache
         self.prefixes = dict(self.loop.run_until_complete(
@@ -117,6 +119,9 @@ class CustomBot(commands.Bot):
 
     async def get_context(self, message, *, cls=CustomContext):
         return await super().get_context(message, cls=cls)
+
+    async def get_client_session(self):
+        return aiohttp.ClientSession(loop=self.loop)
 
     # close our HTTP session when we close the bot.
     async def close(self):
