@@ -35,24 +35,18 @@ class Fun(commands.Cog):
             embed.description = 'You picked the same thing as the bot! Try Again!'
             return await ctx.send(embed=embed)
 
-        if (user_rock := choice == 'rock') and bot_choice == 'scissors' \
-                or bot_choice == 'rock' and choice == 'scissors':
-            if user_rock:
-                embed.description = won
-            else:
-                embed.description = lost
-        elif (user_scissors := choice == 'scissors') and bot_choice == 'paper' \
-                or bot_choice == 'scissors' and choice == 'paper':
-            if user_scissors:
-                embed.description = won
-            else:
-                embed.description = lost
-        elif (user_paper := choice == 'paper') and bot_choice == 'rock' \
-                or bot_choice == 'paper' and choice == 'rock':
-            if user_paper:
-                embed.description = won
-            else:
-                embed.description = lost
+        user_won = False
+        if choice == 'rock' and bot_choice == 'scissors':
+            user_won = True
+        elif choice == 'scissors' and bot_choice == 'paper':
+            user_won = True
+        elif choice == 'paper' and bot_choice == 'rock':
+            user_won = True
+
+        if user_won:
+            embed.description = f'You won the game! {choice.title()} beats {bot_choice.title()}'
+        else:
+            embed.description = f'You lost the game! {bot_choice.title()} beats {choice.title()}'
 
         return await ctx.send(embed=embed)
 
