@@ -12,7 +12,7 @@ class Utils(commands.Cog):
         """Shows the uptime of the bot."""
         embed = create_default_embed(ctx)
         embed.title = f'{self.bot.name} Uptime'
-        embed.description = f'```fix\n{self.bot.uptime.in_words()}\n```'
+        embed.add_field(name='Current Uptime', value=f'```fix\n{self.bot.uptime.in_words()}\n```')
         return await ctx.send(embed=embed)
 
     @commands.command(name='ping')

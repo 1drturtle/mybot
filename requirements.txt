@@ -2,6 +2,7 @@
 discord.py
 git+https://github.com/Rapptz/discord-ext-menus@master
 asyncpg # Async PostgreSQL
+aiofiles # async logging
 
 pendulum # Advanced Date/Time
 parsedatetime # Read time intervals from user in
