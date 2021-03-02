@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 async def get_prefix(bot_, message: discord.Message):
     prefixes = [config.PREFIX]
     # first things first, no prefix for jsk
-    if message.author.id in bot_.owner_ids and not bot_.owner_use_prefix\
+    if message.author.id in bot_.owner_ids and not bot_.owner_use_prefix \
             and message.content.startswith('jsk'):
         prefixes.append('')
 
