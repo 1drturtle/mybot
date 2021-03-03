@@ -183,6 +183,32 @@ class Tags(commands.Cog):
                   f' by {ctx.author.name + ctx.author.discriminator} ({ctx.author.id})')
         return await ctx.send(f'Tag `{tag_name}` has been deleted.')
 
+    @tag.command(name='force_delete', aliases=['fd'])
+    @commands.has_permissions(manage_guild=True)
+    async def tag_delete_force(self, ctx, tag_name):
+        """
+        Forcefully deletes a tag from the server. Must have Manage server permisisons
+
+        `tag_name` - The tag to delete.
+        """
+        if not (tag := await self.fetch_tag(ctx, tag_name, owner=False)):
+            return await ctx.send(f'Could not find a tag in this server with name `{tag_name}`.')
+
+        prompt = await ctx.prompt('Tag Deletion Confirmation', f'Please enter the tag you are trying to delete '
+                                                               f'exactly to confirm this action.\n'
+                                                               f'You are attempting to delete `{tag_name}` which is'
+                                                               f'**not your tag!**')
+        if prompt != tag_name:
+            return await ctx.send('Action cancelled!', delete_after=10)
+
+        await self.bot.db.execute(
+            'DELETE FROM tags WHERE tag_id = $1',
+            tag.get('tag_id')
+        )
+        log.debug(f'Tag {tag_name} deleted in {ctx.guild} ({ctx.guild.id})'
+                  f' by {ctx.author.name + ctx.author.discriminator} ({ctx.author.id})')
+        return await ctx.send(f'Tag `{tag_name}` has been deleted.')
+
     @tag.command(name='info')
     async def tag_info(self, ctx, tag_name):
         """

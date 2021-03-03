@@ -125,6 +125,8 @@ class CustomBot(commands.Bot):
         content = f'Command statistics from an hour ago until {now}.\n'
         for value, count in self.commands_used.most_common():
             content += f'Command `{value}`, used {count} time{"s" if count != 1 else ""}\n'
+        if len(content) == len(f'Command statistics from an hour ago until {now}.\n'):
+            return
         log.debug('running command metrics dump')
         async with aiofiles.open(file_path, mode='w+') as f:
             await f.write(content)
