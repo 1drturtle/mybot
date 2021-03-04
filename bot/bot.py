@@ -193,6 +193,14 @@ async def on_message(message):
 
 
 @bot.event
+async def on_message_edit(before, after):
+    # run command again on edit
+    if before.author.id in bot.owner_ids and after.content.lower().startswith('jsk'):
+        ctx = await bot.get_context(after)
+        return await bot.invoke(ctx)
+
+
+@bot.event
 async def on_command(ctx):
 
     await bot.run_command_metrics(ctx)
