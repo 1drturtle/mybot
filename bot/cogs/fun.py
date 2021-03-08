@@ -1,8 +1,9 @@
-from discord.ext import commands
-import random
 import asyncio
+import random
 import typing
+
 import discord
+from discord.ext import commands
 
 from .cards.blackjack import *
 
@@ -87,7 +88,7 @@ class Fun(commands.Cog):
 
         members = await wait_for_reactions(join_msg, '\U0001f44d', 30)
         await join_msg.clear_reactions()
-        join_embed.description = f'Blackjack full! Starting the game in 10...\n' \
+        join_embed.description = f'Time expired! Starting the game in 10...\n' \
                                  f'Players: {", ".join(p.mention for p in members)}'
         await join_msg.edit(embed=join_embed)
         await asyncio.sleep(10)
@@ -108,6 +109,12 @@ class Fun(commands.Cog):
         dealer = Dealer()
         deck = Deck()
 
+        def player_list():
+            all_members = players + [dealer]
+            biggest_name = max([len(x.name) for x in all_members])
+            biggest_cards = max(len(x.card_display) for x in all_members)
+            return '```md\n' + '\n'.join(x.pretty_str(biggest_name, biggest_cards) for x in all_members) + '\n```'
+
         # game loop
         while game_running:
             # reset cards
@@ -123,11 +130,15 @@ class Fun(commands.Cog):
             for player in players:
                 player.cards = [deck.draw(), deck.draw()]
             # construct & send turn embed
-            game_embed.description = '\n'.join([str(dealer)] + [str(player) for player in players])
+            game_embed.description = player_list()
             game_embed_msg = await ctx.send(embed=game_embed)
-            game_running = False
             # go through each player and get their turn action (hit or pass), ignoring busted
+            for player in players:
+                if player.busted:
+                    continue
             # if all pass, end game
+            # debug stop loop
+            game_running = False
 
 
 def setup(bot):

@@ -1,7 +1,7 @@
 import random
-import discord
 import typing
 
+import discord
 
 __all__ = ('Deck', 'Card', 'Player', 'Dealer')
 
@@ -76,6 +76,8 @@ class Player:
         self.cards = cards
         self.player = player
         self.bet = bet
+        if self.player:
+            self.name = self.player.display_name
 
     @property
     def has_face(self):
@@ -97,15 +99,23 @@ class Player:
     def busted(self):
         return self.total_value > 21
 
+    @property
+    def card_display(self):
+        return f'[{", ".join(str(card) for card in self.cards)}]'
+
+    def pretty_card_display(self, space):
+        return f'[{(", ".join(str(card) for card in self.cards) + f"(Total: {self.total_value})"): ^{space}}]'
+
     def __str__(self):
-        return f'{self.player.display_name}: `[{", ".join(str(card) for card in self.cards)}]` ' \
+        return f'{self.name}: `{self.card_display}` ' \
                f'(Total: `{self.total_value}`)'
+
+    def pretty_str(self, max_name: int, max_card: int):
+        return f'{self.name:<{max_name + 1}} - ' \
+               f'{self.pretty_card_display(max_card):<{max_card + 1}}'
 
 
 class Dealer(Player):
     def __init__(self, cards: typing.List[Card] = None):
         super(Dealer, self).__init__(None, cards, -1)
-
-    def __str__(self):
-        return f'Dealer: [`{", ".join(str(card) for card in self.cards)}`] (' \
-               f'Total: `{self.total_value}`)'
+        self.name = 'Dealer'
