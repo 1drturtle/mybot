@@ -101,10 +101,10 @@ class Player:
 
     @property
     def card_display(self):
-        return f'[{", ".join(str(card) for card in self.cards)}]'
+        return f'[{", ".join(str(card) for card in self.cards)} (Total: {self.total_value})]'
 
     def pretty_card_display(self, space):
-        return f'[{(", ".join(str(card) for card in self.cards) + f"(Total: {self.total_value})"): ^{space}}]'
+        return f'[{(", ".join(str(card) for card in self.cards) + f" (Total: {self.total_value})"): ^{space}}]'
 
     def __str__(self):
         return f'{self.name}: `{self.card_display}` ' \
