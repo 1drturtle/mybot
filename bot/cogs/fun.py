@@ -4,6 +4,8 @@ import asyncio
 import typing
 import discord
 
+from .cards.blackjack import *
+
 
 async def wait_for_reactions(msg: discord.Message, reaction_text: str, time=30) -> typing.List[discord.Member]:
     await asyncio.sleep(time)
@@ -15,7 +17,7 @@ async def wait_for_reactions(msg: discord.Message, reaction_text: str, time=30) 
         for user in await reaction.users().flatten():
             if not user.bot:
                 out.append(user)
-    return out
+    return out[:10] # first ten
 
 
 class Fun(commands.Cog):
@@ -75,26 +77,57 @@ class Fun(commands.Cog):
 
         join_embed = ctx.embed
         join_embed.title = 'Join Blackjack!'
-        join_embed.description = 'React with \U0001f44d in the next 30 seconds to play Blackjack!'
+        join_embed.description = 'React with \U0001f44d in the next 30 seconds to play Blackjack!\n' \
+                                 'Max 10 players.'
         join_msg: discord.Message = await ctx.send(embed=join_embed)
         await join_msg.add_reaction('\U0001f44d')
 
         # -------
         # get the players, clear reactions, and edit embed
 
-        players = await wait_for_reactions(join_msg, '\U0001f44d', 30)
+        members = await wait_for_reactions(join_msg, '\U0001f44d', 30)
         await join_msg.clear_reactions()
         join_embed.description = f'Blackjack full! Starting the game in 10...\n' \
-                                 f'Players: {", ".join(p.mention for p in players)}'
+                                 f'Players: {", ".join(p.mention for p in members)}'
         await join_msg.edit(embed=join_embed)
-        await join_msg.delete(delay=10)
+        await asyncio.sleep(10)
+        await join_msg.delete(delay=3)
 
         # -------
         # start the game
+        # TODO: implement betting
+        # TODO: implement PIL-based cards
 
         game_running = True
         game_embed = ctx.embed
         game_embed.title = 'Blackjack'
+        game_embed_msg = None
+
+        # make players
+        players = [Player(m) for m in members]
+        dealer = Dealer()
+        deck = Deck()
+
+        # game loop
+        while game_running:
+            # reset cards
+            for player in players:
+                player.cards = []
+            dealer.cards = []
+            # reset deck if next turn would bring len <= 28
+            next_turn_deck_length = deck.card_count - (2 * len(players) + 1)
+            if next_turn_deck_length <= 28:
+                deck = Deck()
+            # deal cards
+            dealer.cards = [deck.draw(), deck.draw()]
+            for player in players:
+                player.cards = [deck.draw(), deck.draw()]
+            # construct & send turn embed
+            game_embed.description = '\n'.join([str(dealer)] + [str(player) for player in players])
+            game_embed_msg = await ctx.send(embed=game_embed)
+            game_running = False
+            # go through each player and get their turn action (hit or pass), ignoring busted
+            # if all pass, end game
 
 
 def setup(bot):
