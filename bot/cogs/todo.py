@@ -1,7 +1,7 @@
-from discord.ext import commands
 import typing
-from asyncpg.exceptions import UniqueViolationError
 
+from asyncpg.exceptions import UniqueViolationError
+from discord.ext import commands
 
 
 # Each User has one To-do list
