@@ -48,6 +48,7 @@ async def get_prefix(bot_, message: discord.Message):
 
 
 intents = discord.Intents.default()
+intents.members = True
 
 COGS = {
     'cogs.errors', 'jishaku',

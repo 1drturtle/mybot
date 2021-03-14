@@ -6,6 +6,7 @@ import discord
 from discord.ext import commands
 
 from .cards.blackjack import *
+from utils.functions import try_delete
 
 
 async def wait_for_reactions(msg: discord.Message, reaction_text: str, time=30) -> typing.List[discord.Member]:
@@ -18,7 +19,52 @@ async def wait_for_reactions(msg: discord.Message, reaction_text: str, time=30) 
         for user in await reaction.users().flatten():
             if not user.bot:
                 out.append(user)
-    return out[:10] # first ten
+    return out[:10]  # first ten
+
+
+async def recursive_hit(deck: Deck, g_msg: discord.Message, g_embed: discord.Embed,
+                        player: Player, p_list, ctx):
+    """
+    :return: List[Deck, Embed, Message, status: bool]
+    """
+    # Check Deck for Safety Add Card
+    if deck.card_count <= 28:
+        deck = Deck()
+    # First Hit
+    player.cards.append(deck.draw())
+    if player.busted:
+        g_embed.clear_fields()
+        return [deck, g_embed, g_msg, None]
+    # update
+    await try_delete(g_msg)
+    g_embed.description = p_list()
+    g_embed.clear_fields()
+    g_msg = await ctx.send(embed=g_embed)
+    # Prompt for another hit if not busted
+    question = await ctx.send('Would you like to hit again?\n'
+                              'React with :white_check_mark: or :no_entry_sign:.')
+    # add reactions to question and wait for response
+    await question.add_reaction('\U00002705')
+    await question.add_reaction('\U0001F6AB')
+
+    def check(reaction, user):
+        return user.id == player.player.id and str(reaction.emoji) in ['\U00002705', '\U0001F6AB']
+
+    try:
+        new_reaction, _ = await ctx.bot.wait_for('reaction_add', timeout=60, check=check)
+    except asyncio.TimeoutError:
+        await try_delete(question)
+        await ctx.send('You waited too long! Your turn has been skipped.', delete_after=10)
+        return [deck, g_embed, g_msg, 'timeout']
+
+    await try_delete(question)
+
+    # hit
+    if str(new_reaction.emoji) == '\U00002705':
+        return await recursive_hit(deck, g_msg, g_embed, player, p_list, ctx)
+    # pass
+    if str(new_reaction.emoji) == '\U0001F6AB':
+        return [deck, g_embed, g_msg, 'pass']
 
 
 class Fun(commands.Cog):
@@ -67,78 +113,6 @@ class Fun(commands.Cog):
             embed.description = f'You lost the game! {bot_choice.title()} beats {choice.title()}'
 
         return await ctx.send(embed=embed)
-
-    @commands.command(name='blackjack', aliases=['bkj'])
-    @commands.max_concurrency(1, commands.BucketType.channel)
-    @commands.guild_only()
-    async def blackjack(self, ctx):
-        """Plays blackjack!"""
-        # --------
-        # create join embed & send reactions
-
-        join_embed = ctx.embed
-        join_embed.title = 'Join Blackjack!'
-        join_embed.description = 'React with \U0001f44d in the next 30 seconds to play Blackjack!\n' \
-                                 'Max 10 players.'
-        join_msg: discord.Message = await ctx.send(embed=join_embed)
-        await join_msg.add_reaction('\U0001f44d')
-
-        # -------
-        # get the players, clear reactions, and edit embed
-
-        members = await wait_for_reactions(join_msg, '\U0001f44d', 30)
-        await join_msg.clear_reactions()
-        join_embed.description = f'Time expired! Starting the game in 10...\n' \
-                                 f'Players: {", ".join(p.mention for p in members)}'
-        await join_msg.edit(embed=join_embed)
-        await asyncio.sleep(10)
-        await join_msg.delete(delay=3)
-
-        # -------
-        # start the game
-        # TODO: implement betting
-        # TODO: implement PIL-based cards
-
-        game_running = True
-        game_embed = ctx.embed
-        game_embed.title = 'Blackjack'
-        game_embed_msg = None
-
-        # make players
-        players = [Player(m) for m in members]
-        dealer = Dealer()
-        deck = Deck()
-
-        def player_list():
-            all_members = players + [dealer]
-            biggest_name = max([len(x.name) for x in all_members])
-            biggest_cards = max(len(x.card_display) for x in all_members)
-            return '```md\n' + '\n'.join(x.pretty_str(biggest_name, biggest_cards) for x in all_members) + '\n```'
-
-        # game loop
-        while game_running:
-            # reset cards
-            for player in players:
-                player.cards = []
-            dealer.cards = []
-            # reset deck if next turn would bring len <= 28
-            next_turn_deck_length = deck.card_count - (2 * len(players) + 1)
-            if next_turn_deck_length <= 28:
-                deck = Deck()
-            # deal cards
-            dealer.cards = [deck.draw(), deck.draw()]
-            for player in players:
-                player.cards = [deck.draw(), deck.draw()]
-            # construct & send turn embed
-            game_embed.description = player_list()
-            game_embed_msg = await ctx.send(embed=game_embed)
-            # go through each player and get their turn action (hit or pass), ignoring busted
-            for player in players:
-                if player.busted:
-                    continue
-            # if all pass, end game
-            # debug stop loop
-            game_running = False
 
 
 def setup(bot):

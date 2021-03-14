@@ -5,7 +5,7 @@ from datetime import datetime
 async def try_delete(message):
     try:
         await message.delete()
-    except (discord.Forbidden, discord.NotFound, discord.HTTPException):
+    except Exception:
         pass
 
 
